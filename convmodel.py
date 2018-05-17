@@ -90,7 +90,7 @@ valid_cost = tf.reduce_sum(tf.square(example_batch_valid_predicted - tf.cast(lab
 test_cost = tf.reduce_sum(tf.square(example_batch_test_predicted - tf.cast(label_batch_test, dtype=tf.float32)))
 
 # cost = tf.reduce_mean(-tf.reduce_sum(label_batch * tf.log(y), reduction_indices=[1]))
-optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.007).minimize(train_cost)
+optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.008).minimize(train_cost)
 
 
 # --------------------------------------------------
@@ -122,7 +122,7 @@ with tf.Session() as sess:
     for _ in range(300):
         sess.run(optimizer)
         if _ % 20 == 0:
-            print "Iter:", _, "|| Error:", sess.run(train_cost)
+            print "Iter:", _, "|| Train error:", sess.run(train_cost), "|| Validation error: ", sess.run(valid_cost)
 
             error_train.append(sess.run(train_cost))
             error_valid.append(sess.run(valid_cost))
@@ -159,7 +159,7 @@ with tf.Session() as sess:
 
     save_path = saver.save(sess, "./tmp/model.ckpt")
     print "Model saved in file: %s" % save_path
-
+    print " "
     print "---------------------------------------------"
     coord.request_stop()
     coord.join(threads)

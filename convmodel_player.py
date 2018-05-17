@@ -5,24 +5,30 @@
 import numpy as np
 import tensorflow as tf
 import cv2
-import cv
-
 # --------------------------------------------------
 #
 #       MODEL
 #
 # --------------------------------------------------
 
+
 n_input = 80 * 140
 
-o1 = tf.layers.conv2d(inputs=X, filters=32, kernel_size=3, activation=tf.nn.relu)
+
+x = tf.placeholder(tf.float32, [None, 80, 140, 1])
+x = tf.to_float(x)/256. - 0.5
+
+o1 = tf.layers.conv2d(inputs=x, filters=32, kernel_size=3, activation=tf.nn.relu)
 o2 = tf.layers.max_pooling2d(inputs=o1, pool_size=2, strides=2)
 o3 = tf.layers.conv2d(inputs=o2, filters=64, kernel_size=3, activation=tf.nn.relu)
 o4 = tf.layers.max_pooling2d(inputs=o3, pool_size=2, strides=2)
-h = tf.layers.dense(inputs=tf.reshape(o4, [batch_size * 3, 33 * 18 * 64]), units=5, activation=tf.nn.relu)
-h2 = tf.layers.dense(inputs=h, units=3, activation=tf.nn.relu)
 
-y = tf.layers.dense(inputs=h2, units=3, activation=tf.nn.softmax)
+# h = tf.layers.dense(inputs=tf.reshape(o4, [batch_size * 4, 18 * 33 * 64]), units=100, activation=tf.nn.relu)
+h = tf.layers.dense(inputs=tf.reshape(o4, [1, 18 * 33 * 64]), units=100, activation=tf.nn.relu)
+h = tf.layers.dropout(h, rate=0.25, training=True)
+y = tf.layers.dense(inputs=h, units=4, activation=tf.nn.sigmoid)
+
+r = tf.argmax(y, axis=1)
 
 # --------------------------------------------------
 #
@@ -51,7 +57,18 @@ with tf.Session() as sess:
 
         cv2.imshow('Capture', gray)
         frame = gray.reshape(-1, 80, 140, 1)
-        print(sess.run(y, feed_dict={x: frame})
+        frame = frame
+
+        print(sess.run(y, feed_dict={x: frame}))
+
+        prediction = sess.run(r, feed_dict={x: frame})
+
+        if prediction == [0]:
+            print("A")
+        elif prediction == [1]:
+            print("B")
+        elif prediction == [2]:
+            print("C")
 
         ch = 0xFF & cv2.waitKey(1)
 
